@@ -1,33 +1,37 @@
-package org.example;
+package org.example.messageProcessing;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import org.example.Crc16;
+import org.example.messages.Message;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MessageEncoder {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-    @SneakyThrows
-    public static byte[] encode(Product message){
-        byte[] bytes = objectMapper.writeValueAsBytes(message);
-        final int messageSize = bytes.length + 4 + 4;
-        final int bufferSize = 1 + 1 + 8 + 4 + 2 + 2 + messageSize;
-        ByteBuffer buffer = ByteBuffer.allocate(bufferSize).order(ByteOrder.BIG_ENDIAN);
-        buffer.put((byte)0x13)
-                .put((byte)0x1)
-                .putLong(1)
-                .putInt(messageSize)
-                .putShort(Crc16.calc(buffer.array(), 0, 14))
-                .putInt(3)
-                .putInt(4)
-                .put(bytes)
-                .putShort(Crc16.calc(buffer.array(), 16, messageSize));
-        return buffer.array();
+@AllArgsConstructor
+public class Decryptor implements Runnable {
+    BlockingQueue<byte[]> request;
+    BlockingQueue<Message> message;
+    AtomicBoolean isRunning;
+
+    @Override
+    public void run() {
+        try{
+            while (isRunning.get()) {
+                message.put(decode(request.take()));
+            }
+        } catch (InterruptedException e) {
+            System.out.println(e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
     @SneakyThrows
-    public static Product decode(byte[] bytes){
+    public static Message decode(byte[] bytes){
+        ObjectMapper objectMapper = new ObjectMapper();
         ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN);
         byte mByte = buffer.get();
         if (mByte != 0x13)
@@ -48,6 +52,6 @@ public class MessageEncoder {
         short expectedCrc2 = Crc16.calc(buffer.array(), 16, wLen);
         if (w2Crc16 != expectedCrc2)
             throw new IllegalArgumentException();
-        return objectMapper.readValue(messageBytes, Product.class);
+        return objectMapper.readValue(messageBytes, Message.class);
     }
 }
