@@ -24,11 +24,13 @@ class ServerTest {
                 Thread.sleep(200);
                 CommunicationTCP clientTcp = new CommunicationTCP(new Socket(InetAddress.getLocalHost(), 8080));
                 clientTcp.write("Hello!");
+                clientTcp.close();
             }
         }.start();
 
         ICommunication serverTcp = server.listen();
         assertEquals("Hello!", serverTcp.read());
+        serverTcp.close();
     }
 
     @Test
