@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Main {
     public static void main(String[] args) {
-        MessagePipeLine(200);
+//        MessagePipeLine(200);
     }
 
     @SneakyThrows
