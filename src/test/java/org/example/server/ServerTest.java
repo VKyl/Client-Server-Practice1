@@ -5,8 +5,10 @@ import org.junit.jupiter.api.Test;
 
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ServerTest {
 
@@ -29,21 +31,20 @@ class ServerTest {
         assertEquals("Hello!", serverTcp.read());
     }
 
-//    @Test
-//    @SneakyThrows
-//    void testUDP() {
-//        Server server = new Server(8080, InetAddress.getLocalHost(), ":PREFIX:");
-//        CommunicationUDP clientUdp = new CommunicationUDP(InetAddress.getLocalHost(), 8081, ":PREFIX:");
-//        ICommunication serverUdp = server.listen();
-//        new Thread(){
-//            @Override
-//            @SneakyThrows
-//            public void run() {
-//                Thread.sleep(500);
-//                clientUdp.write("Hello!");
-//            }
-//        }.start();
-//
-//        assertEquals(serverUdp.read(), "Hello!");
-//    }
+    @Test
+    @SneakyThrows
+    void testUDP_THROWS_TIMEOUT() {
+        Server server = new Server(8080, InetAddress.getLocalHost(), ":PREFIX:", 1);
+        CommunicationUDP clientUdp = new CommunicationUDP(InetAddress.getLocalHost(), 8081, ":PREFIX:", 1);
+        new Thread(){
+            @Override
+            @SneakyThrows
+            public void run() {
+                Thread.sleep(500);
+                assertThrows(SocketTimeoutException.class, () -> clientUdp.write("Hello!"));
+            }
+        }.start();
+
+
+    }
 }

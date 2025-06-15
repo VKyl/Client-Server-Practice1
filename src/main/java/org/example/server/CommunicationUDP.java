@@ -31,7 +31,6 @@ public class CommunicationUDP implements Closeable, ICommunication {
     public void write(String msg) throws IOException {
         for(int i = 0; i < RETRIES; i++){
             write_("REQ"+ expPrefix + msg);
-            socket.setSoTimeout(5 * 60 * 1000);
             String message = read();
             if (message.startsWith("RES" + expPrefix)) return;
         }
@@ -39,6 +38,7 @@ public class CommunicationUDP implements Closeable, ICommunication {
 
     public String read() throws IOException {
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+        socket.setSoTimeout(5 * 1000);
         socket.receive(packet);
         byte[] data = packet.getData();
         String response = new String(data, 0, packet.getLength());
@@ -51,11 +51,14 @@ public class CommunicationUDP implements Closeable, ICommunication {
     }
 
     private void handlePrefixCorrectness(String response) throws IOException {
-        if (response.startsWith("REQ"+ expPrefix))
-            write_("RES" + expPrefix + response);
-        else
+        if (response.startsWith("REQ" + expPrefix)) {
+            String content = response.substring(("REQ" + expPrefix).length());
+            write_("RES" + expPrefix + content);
+        } else {
             write_(response);
+        }
     }
+
 
     private void write_(String message) throws IOException {
         byte[] data = (message).getBytes();
