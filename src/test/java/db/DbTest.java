@@ -3,6 +3,7 @@ package db;
 import org.example.db.DataBase;
 import org.example.db.MySqlDb;
 import org.example.db.ProductRow;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
@@ -16,7 +17,12 @@ public class DbTest {
     private DataBase db;
     @BeforeEach
     public void setUp() {
-        db = MySqlDb.connect("sample", true);
+        try {
+            db = MySqlDb.connect("sample", true);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            Assumptions.assumeTrue(false);
+        }
     }
 
     @Test
