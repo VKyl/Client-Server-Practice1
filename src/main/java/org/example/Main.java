@@ -1,18 +1,30 @@
 package org.example;
 
+import com.sun.net.httpserver.HttpServer;
 import lombok.SneakyThrows;
+import org.example.http.handlers.auth.LoginHandler;
+import org.example.http.handlers.product.ProductHandler;
 import org.example.messageProcessing.*;
 import org.example.messages.Message;
 import org.example.messages.Response;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) {}
 
+    @SneakyThrows
+    public static HttpServer startServer() {
+        HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 8080), 10);
+        server.createContext("/login", new LoginHandler());
+        server.createContext("/api/product", new ProductHandler());
+        server.start();
+        return server;
     }
 
     @SneakyThrows
